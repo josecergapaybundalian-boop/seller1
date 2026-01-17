@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simple Selling Platform</title>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+(function(){
+    emailjs.init("BFzdrj6_tyqbFmfI6"); // 🔴 PUT YOUR PUBLIC KEY HERE
+})();
+</script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+    padding: 20px;
+}
+
+.section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.product {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+button {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #219150;
+}
+
+.cart-item {
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
+}
+
+.total {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.checkout-btn {
+    background: #e67e22;
+    width: 100%;
+    margin-top: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🛍 Simple Selling Platform</h1>
+<p>Orders will be sent to seller email</p>
+</header>
+
+<div class="container">
+
+<!-- PRODUCTS -->
+<div class="section">
+<h2>Products</h2>
+
+<div class="product">
+<span>Notebook</span>
+<span>฿150</span>
+<button onclick="addToCart('Notebook',150)">Add to Cart</button>
+</div>
+
+<div class="product">
+<span>Pen</span>
+<span>฿20</span>
+<button onclick="addToCart('Pen',20)">Add to Cart</button>
+</div>
+
+<div class="product">
+<span>Backpack</span>
+<span>฿899</span>
+<button onclick="addToCart('Backpack',899)">Add to Cart</button>
+</div>
+</div>
+
+<!-- CART -->
+<div class="section">
+<h2>🛒 Cart</h2>
+<div id="cartItems"></div>
+<p class="total">Total: ฿<span id="totalPrice">0</span></p>
+</div>
+
+<!-- CUSTOMER INFO -->
+<div class="section">
+<h2>👤 Customer Information</h2>
+<input type="text" id="customerName" placeholder="Full Name" required>
+<input type="email" id="customerEmail" placeholder="Email Address" required>
+<button class="checkout-btn" onclick="checkout()">Checkout & Send Order</button>
+</div>
+
+</div>
+
+<script>
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function addToCart(name, price) {
+    let item = cart.find(p => p.name === name);
+
+    if (item) {
+        item.qty++;
+    } else {
+        cart.push({ name, price, qty: 1 });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    displayCart();
+}
+
+function displayCart() {
+    let cartDiv = document.getElementById("cartItems");
+    let total = 0;
+    cartDiv.innerHTML = "";
+
+    if (cart.length === 0) {
+        cartDiv.innerHTML = "<p>Your cart is empty.</p>";
+        document.getElementById("totalPrice").innerText = "0";
+        return;
+    }
+
+    cart.forEach(item => {
+        let itemTotal = item.price * item.qty;
+        total += itemTotal;
+
+        cartDiv.innerHTML += `
+            <div class="cart-item">
+                ${item.name} - ${item.qty} x ฿${item.price}
+                = ฿${itemTotal}
+            </div>
+        `;
+    });
+
+    document.getElementById("totalPrice").innerText = total;
+}
+
+function checkout() {
+    if (cart.length === 0) {
+        alert("Cart is empty!");
+        return;
+    }
+
+    let name = document.getElementById("customerName").value;
+    let email = document.getElementById("customerEmail").value;
+
+    if (name === "" || email === "") {
+        alert("Please enter customer details.");
+        return;
+    }
+
+    let orderText = "";
+    let total = 0;
+
+    cart.forEach(item => {
+        let itemTotal = item.price * item.qty;
+        total += itemTotal;
+        orderText += `${item.name} - ${item.qty} x ฿${item.price} = ฿${itemTotal}\n`;
+    });
+
+    emailjs.send(
+        "service_qqi8i2x",        // ✅ YOUR SERVICE ID
+        "template_zg9md5b",       // 🔴 PUT YOUR TEMPLATE ID
+        {
+            customer_name: name,
+            customer_email: email,
+            order_details: orderText,
+            total: total
+        }
+    ).then(
+        function() {
+            alert("✅ Order sent successfully!");
+        },
+        function(error) {
+            alert("❌ Failed to send order");
+            console.log(error);
+        }
+    );
+
+    cart = [];
+    localStorage.removeItem("cart");
+    displayCart();
+}
+displayCart();
+</script>
+
+</body>
+</html>
